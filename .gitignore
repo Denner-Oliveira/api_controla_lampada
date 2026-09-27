@@ -3,3 +3,5 @@ snapshot.json
 tinytuya.json
 tuya-raw.json
 .env
+__pycache__/
+_.py

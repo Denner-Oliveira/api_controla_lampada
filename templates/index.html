@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controle da Lâmpada</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, #1e2130 0%, #0b0c12 70%);
+    color: #f0f0f5;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 28px 26px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  @media (max-width: 380px) {
+    .card { padding: 22px 18px; border-radius: 16px; }
+    h1 { font-size: 1.1rem; }
+  }
+
+  h1 {
+    font-size: 1.25rem;
+    margin: 0 0 24px;
+    text-align: center;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  label {
+    display: block;
+    margin-top: 22px;
+    margin-bottom: 8px;
+    font-size: 0.78rem;
+    color: #9a9aac;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .buttons { display: flex; gap: 10px; }
+
+  button {
+    flex: 1;
+    min-height: 46px;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.12s ease, filter 0.12s ease;
+  }
+  button:active { transform: scale(0.96); }
+
+  #btnOn {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    color: #06281c;
+  }
+  #btnOff {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    color: #2a0a0a;
+  }
+  #btnWhite {
+    width: 100%;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #f4f4f5, #d4d4d8);
+    color: #18181b;
+  }
+  button:hover { filter: brightness(1.08); }
+
+  .mode-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #d4d4e0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .mode-btn:hover { background: rgba(255, 255, 255, 0.14); }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: #a855f7;
+  }
+
+  input[type="color"] {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 12px;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+  }
+
+  #status {
+    margin-top: 24px;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.35);
+    font-size: 0.78rem;
+    color: #8b8b9e;
+    white-space: pre-wrap;
+    word-break: break-all;
+    min-height: 18px;
+  }
+
+  .brightness-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .brightness-row span { color: #d4d4e0; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>💡 Controle da Lâmpada</h1>
+
+  <div class="buttons">
+    <button id="btnOn">Ligar</button>
+    <button id="btnOff">Desligar</button>
+  </div>
+
+  <label>Brilho</label>
+  <div class="brightness-row">
+    <input type="range" id="brightness" min="1" max="100" value="50">
+    <span id="brightnessValue">50%</span>
+  </div>
+
+  <label>Cor</label>
+  <input type="color" id="color" value="#ffffff">
+
+  <label>Modo</label>
+  <div class="buttons">
+    <button id="modeWhite" class="mode-btn">Branco</button>
+    <button id="modeColor" class="mode-btn">Cor</button>
+    <button id="modeScene" class="mode-btn">Cena</button>
+  </div>
+
+  <div id="status">Pronto.</div>
+</div>
+
+<script>
+  
+  const statusEl = document.getElementById("status");
+
+  function apiUrl(path) {
+    return "/v1" + path;
+  }
+
+  async function call(path, method = "GET") {
+    statusEl.textContent = "Enviando...";
+    try {
+      const res = await fetch(apiUrl(path), { method });
+      const data = await res.json();
+      statusEl.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      statusEl.textContent = "Erro: " + err.message;
+    }
+  }
+
+  document.getElementById("btnOn").addEventListener("click", () => call("/on", "POST"));
+  document.getElementById("btnOff").addEventListener("click", () => call("/off", "POST"));
+  document.getElementById("modeWhite").addEventListener("click", () => call("/mode/white", "POST"));
+  document.getElementById("modeColor").addEventListener("click", () => call("/mode/color", "POST"));
+  document.getElementById("modeScene").addEventListener("click", () => call("/mode/scene", "POST"));
+
+  const brightness = document.getElementById("brightness");
+  const brightnessValue = document.getElementById("brightnessValue");
+  let brightnessTimeout;
+  brightness.addEventListener("input", () => {
+    brightnessValue.textContent = brightness.value + "%";
+    clearTimeout(brightnessTimeout);
+    brightnessTimeout = setTimeout(() => {
+      call("/brightness/" + brightness.value, "POST");
+    }, 300);
+  });
+
+  const color = document.getElementById("color");
+  color.addEventListener("change", () => {
+    const hex = color.value;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    call(`/color/${r}/${g}/${b}`, "POST");
+  });
+</script>
+
+</body>
+</html>
